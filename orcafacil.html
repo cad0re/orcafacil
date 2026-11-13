@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFácil - Calculadora e Orçamentos para Freelancers</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- html2pdf.js para exportar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google AdSense Placeholder Script: Descomente e insira seu ID de cliente -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+    <style>
+        body { background-color: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
+        .input-mobile { height: 52px; font-size: 16px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-24 lg:pb-0">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="bg-emerald-600 text-white font-bold p-2 rounded-lg text-lg">OF</span>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">OrcaFácil</h1>
+                    <p class="text-xs text-slate-400">Gestão e Orçamentos para Freelancers</p>
+                </div>
+            </div>
+            <div class="hidden lg:flex space-x-6 text-sm font-medium">
+                <button onclick="switchTab('hora')" class="nav-btn-hora hover:text-emerald-400 transition cursor-pointer text-emerald-400 font-semibold">1. Minha Hora</button>
+                <button onclick="switchTab('servico')" class="nav-btn-servico hover:text-emerald-400 transition cursor-pointer">2. Serviço</button>
+                <button onclick="switchTab('orcamento')" class="nav-btn-orcamento hover:text-emerald-400 transition cursor-pointer">3. Orçamento</button>
+                <button onclick="switchTab('privacidade')" class="nav-btn-privacidade hover:text-emerald-400 transition cursor-pointer">Privacidade</button>
+                <button onclick="switchTab('contato')" class="nav-btn-contato hover:text-emerald-400 transition cursor-pointer">Contato</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container com Layout Flex para Coluna Lateral de Anúncio -->
+    <main class="max-w-7xl mx-auto w-full px-4 py-6 flex-grow flex gap-6">
+        
+        <!-- Conteúdo Principal (Abas) -->
+        <div class="flex-grow max-w-3xl mx-auto w-full">
+
+            <!-- ABA 1: MINHA HORA -->
+            <section id="tab-hora" class="tab-content bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold text-slate-800 mb-1">Módulo 1: Calcular Valor da Hora</h2>
+                <p class="text-sm text-slate-500 mb-6">Descubra quanto vale o seu trabalho por hora e por dia com base nos seus custos reais.</p>
+                
+                <form id="form-hora" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Custos Fixos Mensais (R$)</label>
+                        <input type="number" id="custos_fixos" step="0.01" placeholder="Ex: 2500.00" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        <span class="text-xs text-slate-400">Aluguel, internet, ferramentas, MEI, etc.</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Horas trabalhadas / dia</label>
+                            <input type="number" id="horas_dia" value="8" step="1" min="1" max="24" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Dias trabalhados / mês</label>
+                            <input type="number" id="dias_mes" value="20" step="1" min="1" max="31" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Margem de Lucro / Reserva (%)</label>
+                        <input type="number" id="margem_lucro" value="20" step="1" min="0" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        <span class="text-xs text-slate-400">Percentual para reinvestimento e imprevistos.</span>
+                    </div>
+
+                    <button type="button" onclick="calcularHora()" class="w-full bg-slate-900 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition cursor-pointer input-mobile flex items-center justify-center">
+                        Calcular Minha Hora
+                    </button>
+                </form>
+
+                <!-- Resultado Módulo 1 -->
+                <div id="resultado-hora" class="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-xl hidden">
+                    <h3 class="text-md font-bold text-slate-800 mb-3">Resultado do Cálculo:</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <span class="text-xs text-slate-500 block">Valor da Hora Técnica</span>
+                            <span id="res_hora_tec" class="text-xl font-extrabold text-emerald-600">R$ 0,00</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <span class="text-xs text-slate-500 block">Valor Sugerido por Dia</span>
+                            <span id="res_dia_tec" class="text-xl font-extrabold text-slate-800">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="usarHoraNoOrcamento()" class="w-full bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-emerald-500 transition cursor-pointer input-mobile flex items-center justify-center">
+                        Usar esta hora no orçamento ➔
+                    </button>
+                </div>
+
+                <!-- Bloco AdSense abaixo do módulo -->
+                <div class="mt-8 p-4 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-center text-xs text-slate-400">
+                    <!-- Anúncio AdSense -->
+                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                    <span>[Espaço Publicitário - Google AdSense]</span>
+                </div>
+            </section>
+
+            <!-- ABA 2: SERVIÇO -->
+            <section id="tab-servico" class="tab-content bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hidden">
+                <h2 class="text-xl font-bold text-slate-800 mb-1">Módulo 2: Composição do Serviço</h2>
+                <p class="text-sm text-slate-500 mb-6">Monte o preço final somando materiais, tempo de execução e taxas.</p>
+                
+                <form id="form-servico" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Custo dos Materiais (R$)</label>
+                        <input type="number" id="srv_materiais" step="0.01" value="0.00" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Tempo Estimado</label>
+                            <input type="number" id="srv_tempo" step="0.5" value="4" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Unidade de Tempo</label>
+                            <select id="srv_unidade" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                                <option value="horas">Horas</option>
+                                <option value="dias">Dias</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Valor da Hora do Profissional (R$)</label>
+                        <input type="number" id="srv_valor_hora" step="0.01" placeholder="Calculado no Módulo 1 ou digite" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Deslocamento / Frete (R$)</label>
+                            <input type="number" id="srv_deslocamento" step="0.01" value="0.00" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Imprevistos / Riscos (%)</label>
+                            <input type="number" id="srv_imprevistos" step="1" value="10" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="calcularServico()" class="w-full bg-slate-900 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition cursor-pointer input-mobile flex items-center justify-center">
+                        Calcular Preço do Serviço
+                    </button>
+                </form>
+
+                <!-- Resultado Módulo 2 -->
+                <div id="resultado-servico" class="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-xl hidden">
+                    <h3 class="text-md font-bold text-slate-800 mb-3">Detalhamento do Orçamento:</h3>
+                    <ul class="text-sm space-y-2 text-slate-600 mb-4 divide-y divide-slate-200">
+                        <li class="flex justify-between pt-1"><span>Mão de Obra:</span> <strong id="res_srv_mo" class="text-slate-800">R$ 0,00</strong></li>
+                        <li class="flex justify-between pt-2"><span>Materiais:</span> <strong id="res_srv_mat" class="text-slate-800">R$ 0,00</strong></li>
+                        <li class="flex justify-between pt-2"><span>Deslocamento:</span> <strong id="res_srv_desl" class="text-slate-800">R$ 0,00</strong></li>
+                        <li class="flex justify-between pt-2"><span>Imprevistos:</span> <strong id="res_srv_imp" class="text-slate-800">R$ 0,00</strong></li>
+                        <li class="flex justify-between pt-3 text-base font-bold text-slate-900 border-t border-slate-300"><span>Total Sugerido:</span> <span id="res_srv_total" class="text-emerald-600">R$ 0,00</span></li>
+                    </ul>
+                    <button type="button" onclick="enviarParaOrcamento()" class="w-full bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-emerald-500 transition cursor-pointer input-mobile flex items-center justify-center">
+                        Criar orçamento com este valor ➔
+                    </button>
+                </div>
+
+                <!-- Bloco AdSense abaixo do módulo -->
+                <div class="mt-8 p-4 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-center text-xs text-slate-400">
+                    <!-- Anúncio AdSense -->
+                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                    <span>[Espaço Publicitário - Google AdSense]</span>
+                </div>
+            </section>
+
+            <!-- ABA 3: ORÇAMENTO & PDF -->
+            <section id="tab-orcamento" class="tab-content bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hidden">
+                <h2 class="text-xl font-bold text-slate-800 mb-1">Módulo 3: Gerar Orçamento</h2>
+                <p class="text-sm text-slate-500 mb-6">Preencha os dados finais para exportar o PDF e enviar via WhatsApp.</p>
+                
+                <form id="form-orcamento" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nome do Prestador / Empresa</label>
+                            <input type="text" id="orc_prestador" placeholder="Ex: João Elétrica" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Telefone do Prestador</label>
+                            <input type="text" id="orc_tel_prestador" placeholder="Ex: (51) 99999-9999" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nome do Cliente</label>
+                            <input type="text" id="orc_cliente" placeholder="Ex: Maria Silva" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">WhatsApp do Cliente (com DDD)</label>
+                            <input type="text" id="orc_whatsapp" placeholder="Ex: 51 98888-8888" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Título do Serviço</label>
+                        <input type="text" id="orc_servico_nome" placeholder="Ex: Instalação de Quadro Elétrico" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Descrição Detalhada do Serviço</label>
+                        <textarea id="orc_descricao" rows="3" placeholder="Descreva o que será feito..." class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" required></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Valor Total (R$)</label>
+                            <input type="number" id="orc_valor" step="0.01" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-600" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Validade (dias)</label>
+                            <input type="number" id="orc_validade" value="10" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Condições de Pagamento</label>
+                            <input type="text" id="orc_pagamento" value="50% Pix entrada + 50% na entrega" class="w-full px-4 border border-slate-300 rounded-xl input-mobile focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação Final -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="button" onclick="gerarPDF()" class="flex-1 bg-slate-900 text-white font-bold py-3 px-4 rounded-xl hover:bg-slate-800 transition cursor-pointer input-mobile flex items-center justify-center space-x-2">
+                            <span>📄 Baixar Orçamento PDF</span>
+                        </button>
+                        <button type="button" onclick="enviarWhatsApp()" class="flex-1 bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-emerald-500 transition cursor-pointer input-mobile flex items-center justify-center space-x-2">
+                            <span>💬 Enviar no WhatsApp</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Template Oculto para o PDF A4 -->
+                <div id="pdf-template" class="hidden">
+                    <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; background: #ffffff; width: 210mm; min-height: 297mm; box-sizing: border-box; margin: 0 auto;">
+                        <!-- Cabeçalho -->
+                        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px;">
+                            <div>
+                                <h1 id="pdf_view_prestador" style="font-size: 24px; font-weight: bold; color: #0f172a; margin: 0 0 5px 0;">Prestador</h1>
+                                <p style="margin: 0; font-size: 14px; color: #64748b;">Tel: <span id="pdf_view_tel"></span></p>
+                            </div>
+                            <div style="text-align: right;">
+                                <h2 style="font-size: 20px; font-weight: bold; color: #059669; margin: 0 0 5px 0;">ORÇAMENTO</h2>
+                                <p style="margin: 0; font-size: 13px; color: #64748b;">Nº: <span id="pdf_view_num">#001</span></p>
+                                <p style="margin: 0; font-size: 13px; color: #64748b;">Data: <span id="pdf_view_data"></span></p>
+                            </div>
+                        </div>
+
+                        <!-- Dados do Cliente -->
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 5px 0; font-size: 14px;"><strong>Cliente:</strong> <span id="pdf_view_cliente"></span></p>
+                            <p style="margin: 0; font-size: 14px;"><strong>Validade da Proposta:</strong> <span id="pdf_view_validade"></span> dias</p>
+                        </div>
+
+                        <!-- Detalhes do Serviço -->
+                        <div style="margin-bottom: 40px;">
+                            <h3 id="pdf_view_servico_titulo" style="font-size: 16px; font-weight: bold; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 10px;">Serviço</h3>
+                            <p id="pdf_view_descricao" style="font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-wrap; margin-bottom: 20px;"></p>
+                        </div>
+
+                        <!-- Pagamento e Valor Destaque -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; padding: 20px; border-radius: 8px; border: 1px solid #10b981; margin-bottom: 50px;">
+                            <div>
+                                <p style="margin: 0 0 5px 0; font-size: 13px; color: #047857; font-weight: bold;">CONDIÇÕES DE PAGAMENTO:</p>
+                                <p id="pdf_view_pagamento" style="margin: 0; font-size: 14px; color: #065f46;"></p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0 0 5px 0; font-size: 13px; color: #047857; font-weight: bold;">VALOR TOTAL:</p>
+                                <p id="pdf_view_valor" style="margin: 0; font-size: 26px; font-weight: bold; color: #047857;">R$ 0,00</p>
+                            </div>
+                        </div>
+
+                        <!-- Assinaturas -->
+                        <div style="margin-top: 80px; display: flex; justify-content: space-between;">
+                            <div style="width: 45%; text-align: center;">
+                                <div style="border-top: 1px solid #94a3b8; padding-top: 10px; font-size: 13px; color: #64748b;">Assinatura do Prestador</div>
+                            </div>
+                            <div style="width: 45%; text-align: center;">
+                                <div style="border-top: 1px solid #94a3b8; padding-top: 10px; font-size: 13px; color: #64748b;">De acordo do Cliente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco AdSense abaixo do módulo -->
+                <div class="mt-8 p-4 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-center text-xs text-slate-400">
+                    <!-- Anúncio AdSense -->
+                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                    <span>[Espaço Publicitário - Google AdSense]</span>
+                </div>
+            </section>
+
+            <!-- ABA PRIVACIDADE (Obrigatória AdSense) -->
+            <section id="tab-privacidade" class="tab-content bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hidden">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">Política de Privacidade</h2>
+                <div class="text-sm text-slate-600 space-y-3 leading-relaxed">
+                    <p>O <strong>OrcaFácil</strong> valoriza a sua privacidade. Este aplicativo foi desenvolvido como uma ferramenta de utilidade para freelancers e prestadores de serviços.</p>
+                    <p><strong>Armazenamento Local:</strong> Todos os dados inseridos (como custos, valores de hora e orçamentos) são salvos exclusivamente no armazenamento local do seu navegador (<code class="bg-slate-100 px-1 py-0.5 rounded">localStorage</code>). Nós não coletamos, armazenamos ou compartilhamos nenhuma informação pessoal ou financeira em servidores externos.</p>
+                    <p><strong>Anúncios e Cookies:</strong> Este site pode exibir anúncios fornecidos por redes de terceiros, como o Google AdSense, que utilizam cookies para exibir anúncios com base em suas visitas anteriores a este ou a outros sites.</p>
+                </div>
+            </section>
+
+            <!-- ABA CONTATO (Obrigatória AdSense) -->
+            <section id="tab-contato" class="tab-content bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hidden">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">Contato & Suporte</h2>
+                <p class="text-sm text-slate-600 mb-4">Tem alguma dúvida, sugestão de melhoria ou encontrou algum problema no OrcaFácil? Entre em contato conosco:</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-700 space-y-2">
+                    <p>📧 <strong>E-mail:</strong> suporte@orcafacil.app</p>
+                    <p>💬 <strong>WhatsApp de Suporte:</strong> (51) 99999-9999</p>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Coluna Lateral de Anúncio (Apenas Telas Largas - 300x600) -->
+        <aside class="hidden lg:block w-[300px] flex-shrink(-0)">
+            <div class="sticky top-20 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <span class="text-xs text-slate-400 block mb-2">Publicidade</span>
+                <!-- Anúncio AdSense 300x600 -->
+                <div class="h-[600px] bg-slate-100 border border-dashed border-slate-300 rounded-xl flex items-center justify-center text-xs text-slate-400">
+                    <ins class="adsbygoogle" style="display:inline-block;width:300px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0987654321"></ins>
+                    <span>[Anúncio 300x600]</span>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Navegação Fixa Inferior (Mobile-First) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 flex justify-around py-3 px-2">
+        <button onclick="switchTab('hora')" class="nav-btn-hora flex flex-col items-center text-emerald-600 font-semibold text-xs">
+            <span class="text-lg">⏱️</span>
+            <span>Minha Hora</span>
+        </button>
+        <button onclick="switchTab('servico')" class="nav-btn-servico flex flex-col items-center text-slate-500 font-medium text-xs">
+            <span class="text-lg">🛠️</span>
+            <span>Serviço</span>
+        </button>
+        <button onclick="switchTab('orcamento')" class="nav-btn-orcamento flex flex-col items-center text-slate-500 font-medium text-xs">
+            <span class="text-lg">📄</span>
+            <span>Orçamento</span>
+        </button>
+        <button onclick="switchTab('privacidade')" class="nav-btn-privacidade flex flex-col items-center text-slate-500 font-medium text-xs">
+            <span class="text-lg">🔒</span>
+            <span>Privacidade</span>
+        </button>
+        <button onclick="switchTab('contato')" class="nav-btn-contato flex flex-col items-center text-slate-500 font-medium text-xs">
+            <span class="text-lg">✉️</span>
+            <span>Contato</span>
+        </button>
+    </nav>
+
+    <!-- Rodapé Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 mb-16 lg:mb-0">
+        &copy; 2026 OrcaFácil. Todos os direitos reservados.
+    </footer>
+
+    <!-- Scripts de Lógica -->
+    <script>
+        // Função de Navegação por Abas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            // Atualizar classes dos botões mobile e desktop
+            document.querySelectorAll('[class*="nav-btn-"]').forEach(btn => {
+                btn.classList.remove('text-emerald-600', 'font-semibold');
+                btn.classList.add('text-slate-500', 'font-medium');
+            });
+            document.querySelectorAll('.nav-btn-' + tabId).forEach(btn => {
+                btn.classList.remove('text-slate-500', 'font-medium');
+                btn.classList.add('text-emerald-600', 'font-semibold');
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Variáveis globais para cálculo
+        let valorHoraCalculado = 0;
+        let valorServicoCalculado = 0;
+
+        // MÓDULO 1: Calcular Hora
+        function calcularHora() {
+            const custos = parseFloat(document.getElementById('custos_fixos').value) || 0;
+            const hDia = parseFloat(document.getElementById('horas_dia').value) || 8;
+            const dMes = parseFloat(document.getElementById('dias_mes').value) || 20;
+            const margem = parseFloat(document.getElementById('margem_lucro').value) || 0;
+
+            const totalHorasMes = hDia * dMes;
+            if (totalHorasMes <= 0) return;
+
+            const custoHoraBase = custos / totalHorasMes;
+            valorHoraCalculado = custoHoraBase * (1 + (margem / 100));
+            const valorDiaCalculado = valorHoraCalculado * hDia;
+
+            document.getElementById('res_hora_tec').innerText = 'R$ ' + valorHoraCalculado.toFixed(2).replace('.', ',');
+            document.getElementById('res_dia_tec').innerText = 'R$ ' + valorDiaCalculado.toFixed(2).replace('.', ',');
+            document.getElementById('resultado-hora').classList.remove('hidden');
+
+            salvarDadosLocal();
+        }
+
+        function usarHoraNoOrcamento() {
+            document.getElementById('srv_valor_hora').value = valorHoraCalculado.toFixed(2);
+            switchTab('servico');
+        }
+
+        // MÓDULO 2: Calcular Serviço
+        function calcularServico() {
+            const materiais = parseFloat(document.getElementById('srv_materiais').value) || 0;
+            let tempo = parseFloat(document.getElementById('srv_tempo').value) || 0;
+            const unidade = document.getElementById('srv_unidade').value;
+            const valorHora = parseFloat(document.getElementById('srv_valor_hora').value) || valorHoraCalculado;
+            const deslocamento = parseFloat(document.getElementById('srv_deslocamento').value) || 0;
+            const imprevistosPct = parseFloat(document.getElementById('srv_imprevistos').value) || 0;
+
+            // Se for em dias, converter para horas (considerando 8h/dia padrão ou horas/dia configuradas)
+            const hDia = parseFloat(document.getElementById('horas_dia').value) || 8;
+            let totalHoras = unidade === 'dias' ? tempo * hDia : tempo;
+
+            const maoDeObra = totalHoras * valorHora;
+            const subtotal = maoDeObra + materiais + deslocamento;
+            const imprevistos = subtotal * (imprevistosPct / 100);
+            valorServicoCalculado = subtotal + imprevistos;
+
+            document.getElementById('res_srv_mo').innerText = 'R$ ' + maoDeObra.toFixed(2).replace('.', ',');
+            document.getElementById('res_srv_mat').innerText = 'R$ ' + materiais.toFixed(2).replace('.', ',');
+            document.getElementById('res_srv_desl').innerText = 'R$ ' + deslocamento.toFixed(2).replace('.', ',');
+            document.getElementById('res_srv_imp').innerText = 'R$ ' + imprevistos.toFixed(2).replace('.', ',');
+            document.getElementById('res_srv_total').innerText = 'R$ ' + valorServicoCalculado.toFixed(2).replace('.', ',');
+            
+            document.getElementById('resultado-servico').classList.remove('hidden');
+            salvarDadosLocal();
+        }
+
+        function enviarParaOrcamento() {
+            document.getElementById('orc_valor').value = valorServicoCalculado.toFixed(2);
+            switchTab('orcamento');
+        }
+
+        // MÓDULO 3: Gerar PDF e WhatsApp
+        function preencherTemplatePDF() {
+            document.getElementById('pdf_view_prestador').innerText = document.getElementById('orc_prestador').value || 'Prestador';
+            document.getElementById('pdf_view_tel').innerText = document.getElementById('orc_tel_prestador').value;
+            document.getElementById('pdf_view_num').innerText = '#' + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('pdf_view_data').innerText = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('pdf_view_cliente').innerText = document.getElementById('orc_cliente').value;
+            document.getElementById('pdf_view_validade').innerText = document.getElementById('orc_validade').value;
+            document.getElementById('pdf_view_servico_titulo').innerText = document.getElementById('orc_servico_nome').value || 'Orçamento de Serviço';
+            document.getElementById('pdf_view_descricao').innerText = document.getElementById('orc_descricao').value;
+            document.getElementById('pdf_view_pagamento').innerText = document.getElementById('orc_pagamento').value;
+            
+            const val = parseFloat(document.getElementById('orc_valor').value) || 0;
+            document.getElementById('pdf_view_valor').innerText = 'R$ ' + val.toFixed(2).replace('.', ',');
+        }
+
+        function gerarPDF() {
+            preencherTemplatePDF();
+            const element = document.getElementById('pdf_template');
+            element.classList.remove('hidden');
+
+            const opt = {
+                margin:       0,
+                filename:     'orcamento_' + (document.getElementById('orc_cliente').value || 'cliente').toLowerCase().replace(/\s+/g, '_') + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(element).set(opt).save().then(() => {
+                element.classList.add('hidden');
+            });
+        }
+
+        function enviarWhatsApp() {
+            let whatsapp = document.getElementById('orc_whatsapp').value.replace(/\D/g, '');
+            if (!whatsapp) {
+                alert('Por favor, informe o WhatsApp do cliente.');
+                return;
+            }
+            // Adicionar DDI 55 se o número vier só com DDD (ex: 11 dígitos ou menos)
+            if (whatsapp.length <= 11 && !whatsapp.startsWith('55')) {
+                whatsapp = '55' + whatsapp;
+            }
+
+            const prestador = document.getElementById('orc_prestador').value || 'Prestador';
+            const cliente = document.getElementById('orc_cliente').value || 'Cliente';
+            const servico = document.getElementById('orc_servico_nome').value || 'Serviço';
+            const valor = document.getElementById('orc_valor').value || '0,00';
+            const validade = document.getElementById('orc_validade').value || '10';
+
+            const mensagem = `Olá ${cliente} aqui é ${prestador}! Segue o resumo do orçamento para *${servico}*:\n\n💰 *Valor Total:* R$ ${valor}\n⏳ *Validade:* ${validade} dias\n\nO PDF detalhado foi gerado e baixado no meu aparelho. Segue em anexo nesta conversa!`;
+
+            const url = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, '_blank');
+        }
+
+        // PERSISTÊNCIA (LocalStorage)
+        function salvarDadosLocal() {
+            const dados = {
+                custos_fixos: document.getElementById('custos_fixos').value,
+                horas_dia: document.getElementById('horas_dia').value,
+                dias_mes: document.getElementById('dias_mes').value,
+                margem_lucro: document.getElementById('margem_lucro').value,
+                srv_materiais: document.getElementById('srv_materiais').value,
+                srv_tempo: document.getElementById('srv_tempo').value,
+                srv_unidade: document.getElementById('srv_unidade').value,
+                srv_valor_hora: document.getElementById('srv_valor_hora').value,
+                srv_deslocamento: document.getElementById('srv_deslocamento').value,
+                srv_imprevistos: document.getElementById('srv_imprevistos').value,
+                orc_prestador: document.getElementById('orc_prestador').value,
+                orc_tel_prestador: document.getElementById('orc_tel_prestador').value,
+                orc_cliente: document.getElementById('orc_cliente').value,
+                orc_whatsapp: document.getElementById('orc_whatsapp').value,
+                orc_servico_nome: document.getElementById('orc_servico_nome').value,
+                orc_descricao: document.getElementById('orc_descricao').value,
+                orc_valor: document.getElementById('orc_valor').value,
+                orc_validade: document.getElementById('orc_validade').value,
+                orc_pagamento: document.getElementById('orc_pagamento').value
+            };
+            localStorage.setItem('orcafacil_dados', JSON.stringify(dados));
+        }
+
+        function carregarDadosLocal() {
+            const salvo = localStorage.getItem('orcafacil_dados');
+            if (!salvo) return;
+            try {
+                const dados = JSON.parse(salvo);
+                for (const key in dados) {
+                    const el = document.getElementById(key);
+                    if (el && dados[key]) el.value = dados[key];
+                }
+            } catch(e) {
+                console.error('Erro ao carregar dados salvos', e);
+            }
+        }
+
+        // Salvar automaticamente ao digitar nos inputs
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            el.addEventListener('input', salvarDadosLocal);
+        });
+
+        window.onload = () => {
+            carregarDadosLocal();
+        };
+    </script>
+</body>
+</html>
